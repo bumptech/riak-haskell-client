@@ -21,6 +21,7 @@ module Network.Riak.Resolvable.Internal
     , ResolutionFailure(..)
     , get
     , getMany
+    , getMerge
     , modify
     , modify_
     , put
@@ -95,11 +96,19 @@ instance (Resolvable a) => Resolvable (Maybe a) where
 
 type Get a = Connection -> Bucket -> Key -> R -> IO (Maybe ([a], VClock))
 
+get_ resolver doGet conn bucket key r =
+  fmap (first resolver) `fmap` doGet conn bucket key r
+{-# INLINE get_ #-}
+
 get :: (Resolvable a) => Get a
     -> (Connection -> Bucket -> Key -> R -> IO (Maybe (a, VClock)))
-get doGet conn bucket key r =
-    fmap (first resolveMany) `fmap` doGet conn bucket key r
+get = get_ resolveMany
 {-# INLINE get #-}
+
+getWithLength :: (Resolvable a) => Get a
+                 -> (Connection -> Bucket -> Key -> R -> IO (Maybe ((a, Int), VClock)))
+getWithLength = get_ resolveManyWithLength
+{-# INLINE getWithLength #-}
 
 getMany :: (Resolvable a) =>
            (Connection -> Bucket -> [Key] -> R -> IO [Maybe ([a], VClock)])
@@ -170,6 +179,21 @@ modify_ doGet doPut conn bucket key r w dw act = do
   fst <$> put doPut conn bucket key (snd <$> a0) a w dw
 {-# INLINE modify_ #-}
 
+getMerge :: (Resolvable a) => Get a -> Put a
+        -> Connection -> Bucket -> Key -> R -> W -> DW
+        -> IO (Maybe (a, VClock))
+getMerge doGet doPut conn bucket key r w dw = do
+  mg <- getWithLength doGet conn bucket key r
+  case mg of
+    Just ((v, l), vc) -> do
+      if l > 1
+        then do
+          (v', vc') <- put doPut conn bucket key (Just vc) v w dw
+          return $ Just (v', vc')
+        else return $ Just (v, vc)
+    Nothing -> return Nothing
+{-# INLINE getMerge #-}
+
 putMany :: (Resolvable a) =>
            (Connection -> Bucket -> [(Key, Maybe VClock, a)] -> W -> DW
                        -> IO [([a], VClock)])
@@ -210,3 +234,7 @@ resolveMany :: (Resolvable a) => [a] -> a
 resolveMany (a:as) = resolveMany' a as
 resolveMany _      = error "resolveMany: empty list"
 {-# INLINE resolveMany #-}
+
+resolveManyWithLength :: (Resolvable a) => [a] -> (a, Int)
+resolveManyWithLength l = (resolveMany l, length l)
+{-# INLINE resolveManyWithLength #-}

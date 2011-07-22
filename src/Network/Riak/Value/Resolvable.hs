@@ -24,6 +24,7 @@ module Network.Riak.Value.Resolvable
     , ResolutionFailure(..)
     , get
     , getMany
+    , getMerge
     , modify
     , modify_
     -- * Low-level modification functions
@@ -108,6 +109,12 @@ put :: (Resolvable a, V.IsContent a) =>
     -> IO (a, VClock)
 put = R.put V.put 
 {-# INLINE put #-}
+
+getMerge :: (Resolvable a, V.IsContent a) =>
+        Connection -> Bucket -> Key -> R -> W -> DW
+        -> IO (Maybe (a, VClock))
+getMerge = R.getMerge V.get V.put
+{-# INLINE getMerge #-}
 
 -- | Store a single value, automatically resolving any vector clock
 -- conflicts that arise.  A single invocation of this function may
