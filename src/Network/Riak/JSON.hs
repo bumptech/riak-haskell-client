@@ -48,7 +48,7 @@ instance Functor JSON where
     {-# INLINE fmap #-}
 
 instance (FromJSON a, ToJSON a) => V.IsContent (JSON a) where
-    parseContent c = J `fmap` (V.parseContent c >>= parseJSON)
+    parseContent b c = J `fmap` (V.parseContent b c >>= parseJSON)
     {-# INLINE parseContent #-}
 
     toContent (J a) = V.toContent (toJSON a)

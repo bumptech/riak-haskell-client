@@ -45,36 +45,36 @@ import qualified Data.Sequence as Seq
 import qualified Network.Riak.Content as C
 import qualified Network.Riak.Request as Req
 
-fromContent :: IsContent c => Content -> Maybe c
-fromContent c = case parse parseContent c of
+fromContent :: IsContent c => Bucket -> Content -> Maybe c
+fromContent b c = case parse (parseContent b) c of
                   Success a -> Just a
                   Error _   -> Nothing
 
 class IsContent c where
-    parseContent :: Content -> Parser c
+    parseContent :: Bucket -> Content -> Parser c
     toContent :: c -> Content
 
 instance IsContent Content where
-    parseContent = return
+    parseContent _ = return
     {-# INLINE parseContent #-}
 
     toContent v = v
     {-# INLINE toContent #-}
 
 instance IsContent () where
-    parseContent c | c == C.empty = pure ()
-                   | otherwise    = empty
+    parseContent _ c | c == C.empty = pure ()
+                     | otherwise    = empty
     {-# INLINE parseContent #-}
 
     toContent _ = C.empty
     {-# INLINE toContent #-}
 
 instance IsContent Aeson.Value where
-    parseContent c | content_type c == Just "application/json" =
-                      case A.parse Aeson.json (value c) of
-                        A.Done _ a     -> return a
-                        A.Fail _ _ err -> fail err
-                   | otherwise = fail "non-JSON document"
+    parseContent _ c | content_type c == Just "application/json" =
+                        case A.parse Aeson.json (value c) of
+                          A.Done _ a     -> return a
+                          A.Fail _ _ err -> fail err
+                     | otherwise = fail "non-JSON document"
     toContent = C.json
     {-# INLINE toContent #-}
 
@@ -91,7 +91,7 @@ deriving instance (IsContent a) => IsContent (ResolvableMonoid a)
 put :: (IsContent c) => Connection -> Bucket -> Key -> Maybe VClock -> c
     -> W -> DW -> IO ([c], VClock)
 put conn bucket key mvclock val w dw =
-  putResp =<< exchange conn
+  putResp bucket =<< exchange conn
               (Req.put bucket key mvclock (toContent val) w dw True)
 
 -- | Store many values.  This may return multiple conflicting siblings
@@ -105,14 +105,14 @@ put conn bucket key mvclock val w dw =
 putMany :: (IsContent c) => Connection -> Bucket -> [(Key, Maybe VClock, c)]
         -> W -> DW -> IO [([c], VClock)]
 putMany conn b puts w dw =
-  mapM putResp =<< pipeline conn (map (\(k,v,c) -> Req.put b k v (toContent c) w dw True) puts)
+  mapM (putResp b) =<< pipeline conn (map (\(k,v,c) -> Req.put b k v (toContent c) w dw True) puts)
 
-putResp :: (IsContent c) => PutResponse -> IO ([c], VClock)
-putResp PutResponse{..} = do
+putResp :: (IsContent c) => Bucket -> PutResponse -> IO ([c], VClock)
+putResp bucket PutResponse{..} = do
   case vclock of
     Nothing -> return ([], VClock L.empty)
     Just s  -> do
-      c <- convert content
+      c <- convert bucket content
       return (c, VClock s)
 
 -- | Store a single value, without the possibility of conflict
@@ -143,24 +143,24 @@ putMany_ conn b puts w dw =
 -- Choosing among them is your responsibility.
 get :: (IsContent c) => Connection -> Bucket -> Key -> R
     -> IO (Maybe ([c], VClock))
-get conn bucket key r = getResp =<< exchangeMaybe conn (Req.get bucket key r)
+get conn bucket key r = getResp bucket =<< exchangeMaybe conn (Req.get bucket key r)
 
 getMany :: (IsContent c) => Connection -> Bucket -> [Key] -> R
         -> IO [Maybe ([c], VClock)]
 getMany conn b ks r =
-    mapM getResp =<< pipelineMaybe conn (map (\k -> Req.get b k r) ks)
+    mapM (getResp b) =<< pipelineMaybe conn (map (\k -> Req.get b k r) ks)
 
-getResp :: (IsContent c) => Maybe GetResponse -> IO (Maybe ([c], VClock))
-getResp resp =
+getResp :: (IsContent c) => Bucket -> Maybe GetResponse -> IO (Maybe ([c], VClock))
+getResp bucket resp =
   case resp of
     Just (GetResponse content (Just s)) -> do
-           c <- convert content
+           c <- convert bucket content
            return $ Just (c, VClock s)
     _   -> return Nothing
 
-convert :: IsContent v => Seq.Seq Content -> IO [v]
-convert = go [] [] . toList
-    where go cs vs (x:xs) = case fromContent y of
+convert :: IsContent v => Bucket -> Seq.Seq Content -> IO [v]
+convert bucket = go [] [] . toList
+    where go cs vs (x:xs) = case fromContent bucket y of
                               Just v -> go cs (v:vs) xs
                               _      -> go (y:cs) vs xs
               where y = unescapeLinks x
