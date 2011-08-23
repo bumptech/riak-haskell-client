@@ -110,6 +110,9 @@ put :: (Resolvable a, V.IsContent a) =>
 put = R.put V.put
 {-# INLINE put #-}
 
+-- | Retrieve a single value.  If conflicting values are returned, the
+-- 'Resolvable' is used to choose a winner and then the resolved value
+-- is put back.
 getMerge :: (Resolvable a, V.IsContent a) =>
         Connection -> Bucket -> Key -> R -> W -> DW
         -> IO (Maybe (a, VClock))
