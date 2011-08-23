@@ -105,9 +105,9 @@ modify_ = R.modify_ V.get V.put
 -- conflict resolution loop, it will throw a 'ResolutionFailure'
 -- exception.
 put :: (Resolvable a, V.IsContent a) =>
-       Connection -> Bucket -> Key -> Maybe VClock -> a -> W -> DW
-    -> IO (a, VClock)
-put = R.put V.put 
+       Connection -> Bucket -> Key -> Maybe VClock -> a -> Maybe Int -> W -> DW
+       -> IO (a, VClock)
+put = R.put V.put
 {-# INLINE put #-}
 
 getMerge :: (Resolvable a, V.IsContent a) =>

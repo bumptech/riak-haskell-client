@@ -102,7 +102,7 @@ modify_ = R.modify_ J.get J.put
 -- conflict resolution loop, it will throw a 'ResolutionFailure'
 -- exception.
 put :: (FromJSON c, ToJSON c, Resolvable c) =>
-       Connection -> Bucket -> Key -> Maybe VClock -> c -> W -> DW
+       Connection -> Bucket -> Key -> Maybe VClock -> c -> Maybe Int -> W -> DW
     -> IO (c, VClock)
 put = R.put J.put
 {-# INLINE put #-}

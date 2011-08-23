@@ -39,7 +39,7 @@ import Data.Data (Data)
 import Data.Either (partitionEithers)
 import Data.Function (on)
 import Data.List (foldl', sortBy)
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromMaybe)
 import Data.Monoid (Monoid(mappend))
 import Data.Typeable (Typeable)
 import Network.Riak.Debug (debugValues)
@@ -130,11 +130,11 @@ type Put a = Connection -> Bucket -> Key -> Maybe VClock -> a -> W -> DW
            -> IO ([a], VClock)
 
 put :: (Resolvable a) => Put a
-    -> Connection -> Bucket -> Key -> Maybe VClock -> a -> W -> DW
+    -> Connection -> Bucket -> Key -> Maybe VClock -> a -> Maybe Int -> W -> DW
     -> IO (a, VClock)
-put doPut conn bucket key mvclock0 val0 w dw = do
+put doPut conn bucket key mvclock0 val0 retries w dw = do
   let go !i val mvclock
-         | i == maxRetries = throwIO RetriesExceeded
+         | i == fromMaybe maxRetries retries = throwIO RetriesExceeded
          | otherwise       = do
         (xs, vclock) <- doPut conn bucket key mvclock val w dw
         case xs of
@@ -157,7 +157,7 @@ put_ :: (Resolvable a) =>
      -> Connection -> Bucket -> Key -> Maybe VClock -> a -> W -> DW
      -> IO ()
 put_ doPut conn bucket key mvclock0 val0 w dw =
-    put doPut conn bucket key mvclock0 val0 w dw >> return ()
+    put doPut conn bucket key mvclock0 val0 (Just maxRetries) w dw >> return ()
 {-# INLINE put_ #-}
 
 modify :: (Resolvable a) => Get a -> Put a
@@ -166,7 +166,7 @@ modify :: (Resolvable a) => Get a -> Put a
 modify doGet doPut conn bucket key r w dw act = do
   a0 <- get doGet conn bucket key r
   (a,b) <- act (fst <$> a0)
-  (a',_) <- put doPut conn bucket key (snd <$> a0) a w dw
+  (a',_) <- put doPut conn bucket key (snd <$> a0) a (Just maxRetries) w dw
   return (a',b)
 {-# INLINE modify #-}
 
@@ -176,7 +176,7 @@ modify_ :: (Resolvable a) => Get a -> Put a
 modify_ doGet doPut conn bucket key r w dw act = do
   a0 <- get doGet conn bucket key r
   a <- act (fst <$> a0)
-  fst <$> put doPut conn bucket key (snd <$> a0) a w dw
+  fst <$> put doPut conn bucket key (snd <$> a0) a (Just maxRetries) w dw
 {-# INLINE modify_ #-}
 
 getMerge :: (Resolvable a) => Get a -> Put a
@@ -188,7 +188,7 @@ getMerge doGet doPut conn bucket key r w dw = do
     Just ((v, l), vc) -> do
       if l > 1
         then do
-          (v', vc') <- put doPut conn bucket key (Just vc) v w dw
+          (v', vc') <- put doPut conn bucket key (Just vc) v (Just maxRetries) w dw
           return $ Just (v', vc')
         else return $ Just (v, vc)
     Nothing -> return Nothing
