@@ -22,13 +22,14 @@ module Network.Riak.Escape
     , unescape
     ) where
 
+import Prelude hiding (concat)
 import Blaze.ByteString.Builder (Builder, fromByteString, toByteString, toLazyByteString)
 import Blaze.ByteString.Builder.Word (fromWord8)
 import Control.Applicative ((<$>))
 import Data.Attoparsec as A
 import Data.Attoparsec.Lazy as AL
 import Data.Bits ((.|.), (.&.), shiftL, shiftR)
-import Data.ByteString (ByteString)
+import Data.ByteString (ByteString, concat)
 import Data.Monoid (mappend, mempty)
 import Data.Text (Text)
 import Data.Word (Word8)
@@ -59,15 +60,15 @@ unescape bs = case unescape' bs of
 {-# INLINE unescape #-}
 
 instance Escape ByteString where
-    escape = toLazyByteString . B.foldl escapeWord8 mempty
+    escape s = L.fromChunks [s]
     {-# INLINE escape #-}
-    unescape' = AL.eitherResult . AL.parse (toByteString <$> unescapeBS)
+    unescape' = Right . concat . L.toChunks
     {-# INLINE unescape' #-}
 
 instance Escape L.ByteString where
-    escape = toLazyByteString . L.foldl escapeWord8 mempty
+    escape = id
     {-# INLINE escape #-}
-    unescape' = AL.eitherResult . AL.parse (toLazyByteString <$> unescapeBS)
+    unescape' = Right
     {-# INLINE unescape' #-}
 
 instance Escape Text where
