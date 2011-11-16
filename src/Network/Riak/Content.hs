@@ -20,6 +20,7 @@ module Network.Riak.Content
     , binary
     , json
     , link
+    , sortContent
     ) where
 
 import Data.Aeson.Encode (encode)
@@ -29,6 +30,7 @@ import Network.Riak.Types.Internal (Bucket, Key, Tag)
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Sequence as Seq
 import qualified Network.Riak.Protocol.Link as Link
+import Data.Maybe (fromMaybe)
 
 -- | Create a link.
 link :: Bucket -> Key -> Tag -> Link.Link
@@ -59,3 +61,15 @@ json :: ToJSON a => a -> Content
 json j = empty { value = encode j
                , content_type = Just "application/json"
                }
+
+getDoubleTime :: Content -> Double
+getDoubleTime c = dblSecs + dblUSecs
+  where
+    dblSecs :: Double
+    dblSecs = fromIntegral $ fromMaybe 0 $ last_mod c
+    dblUSecs = (fromIntegral $ fromMaybe 0 $ last_mod_usecs c) / 1000000.0
+
+sortContent :: Seq.Seq Content -> Seq.Seq Content
+sortContent = Seq.sortBy compareContent
+  where
+    compareContent a b = compare (getDoubleTime a) (getDoubleTime b)

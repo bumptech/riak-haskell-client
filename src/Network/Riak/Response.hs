@@ -38,6 +38,7 @@ import Network.Riak.Protocol.Link
 import Network.Riak.Protocol.ListBucketsResponse
 import Network.Riak.Protocol.PutResponse
 import Network.Riak.Types.Internal hiding (MessageTag(..))
+import Network.Riak.Content (sortContent)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Sequence as Seq
 
@@ -49,14 +50,14 @@ getClientID = client_id
 -- URL-unescaped.
 get :: Maybe GetResponse -> Maybe (Seq.Seq Content, VClock)
 get (Just (GetResponse content (Just vclock)))
-      = Just (unescapeLinks <$> content, VClock vclock)
+      = Just (unescapeLinks <$> (sortContent content), VClock vclock)
 get _ = Nothing
 {-# INLINE get #-}
 
 -- | Construct a put response.  Bucket and key names in links are
 -- URL-unescaped.
 put :: PutResponse -> (Seq.Seq Content, VClock)
-put PutResponse{..} = (unescapeLinks <$> content,
+put PutResponse{..} = (unescapeLinks <$> (sortContent content),
                        VClock (fromMaybe L.empty vclock))
 {-# INLINE put #-}
 
