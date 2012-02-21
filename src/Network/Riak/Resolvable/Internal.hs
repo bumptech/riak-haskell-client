@@ -132,7 +132,7 @@ put doPut conn bucket key mvclock0 val0 retries w dw = do
 
 -- | The maximum number of times to retry conflict resolution.
 maxRetries :: Int
-maxRetries = 64
+maxRetries = 4
 {-# INLINE maxRetries #-}
 
 put_ :: (Resolvable a) =>
