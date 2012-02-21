@@ -21,7 +21,6 @@ module Network.Riak.Value.Resolvable
     (
       V.IsContent(..)
     , Resolvable(..)
-    , ResolutionFailure(..)
     , get
     , getMany
     , getMerge
@@ -34,7 +33,7 @@ module Network.Riak.Value.Resolvable
     , putMany_
     ) where
 
-import Network.Riak.Resolvable.Internal (ResolutionFailure(..), Resolvable(..))
+import Network.Riak.Resolvable.Internal (Resolvable(..))
 import Network.Riak.Types.Internal hiding (MessageTag(..))
 import qualified Network.Riak.Resolvable.Internal as R
 import qualified Network.Riak.Value as V
@@ -134,7 +133,7 @@ getMerge = R.getMerge V.get V.put
 put_ :: (Resolvable a, V.IsContent a) =>
         Connection -> Bucket -> Key -> Maybe VClock -> a -> W -> DW
      -> IO ()
-put_ = R.put_ V.put 
+put_ = R.put_ V.put
 {-# INLINE put_ #-}
 
 -- | Store multiple values, resolving any vector clock conflicts that

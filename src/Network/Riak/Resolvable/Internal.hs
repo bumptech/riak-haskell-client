@@ -10,15 +10,13 @@
 -- Storage and retrieval of data with automatic conflict resolution.
 --
 -- The 'put' and 'putMany' functions will attempt to perform automatic
--- conflict resolution a large number of times.  If they give up due
--- to apparently being stuck in a loop, they will throw a
--- 'ResolutionFailure' exception.
+-- conflict resolution a large number of times.  They will eventually
+-- give up
 
 module Network.Riak.Resolvable.Internal
     (
       Resolvable(..)
     , ResolvableMonoid(..)
-    , ResolutionFailure(..)
     , get
     , getMany
     , getMerge
@@ -39,26 +37,12 @@ import Data.Data (Data)
 import Data.Either (partitionEithers)
 import Data.Function (on)
 import Data.List (foldl', sortBy)
-import Data.Maybe (isJust, fromMaybe)
+import Data.Maybe (isJust, fromMaybe, fromJust)
 import Data.Monoid (Monoid(mappend))
 import Data.Typeable (Typeable)
 import Network.Riak.Debug (debugValues)
 import Network.Riak.Types.Internal hiding (MessageTag(..))
 
--- | Automated conflict resolution failed.
-data ResolutionFailure = RetriesExceeded
-    -- ^ Too many attempts were made to resolve a conflict, with each
-    -- attempt resulting in another conflict.
-    --
-    -- The number of retries that the library will attempt is high
-    -- (64). This makes it extremely unlikely that this exception will
-    -- be thrown during normal application operation.  Instead, this
-    -- exception is most likely to be thrown as a result of a bug in
-    -- your application code, for example if your 'resolve' function
-    -- is misbehaving.
-                         deriving (Eq, Show, Typeable)
-
-instance Exception ResolutionFailure
 
 -- | A type that can automatically resolve a vector clock conflict
 -- between two or more versions of a value.
@@ -134,7 +118,7 @@ put :: (Resolvable a) => Put a
     -> IO (a, VClock)
 put doPut conn bucket key mvclock0 val0 retries w dw = do
   let go !i val mvclock
-         | i == fromMaybe maxRetries retries = throwIO RetriesExceeded
+         | i == fromMaybe maxRetries retries = return (val, fromJust mvclock)
          | otherwise       = do
         (xs, vclock) <- doPut conn bucket key mvclock val w dw
         case xs of
@@ -203,7 +187,7 @@ putMany doPut conn bucket puts0 w dw = go (0::Int) [] . zip [(0::Int)..] $ puts0
  where
   go _ acc [] = return . map snd . sortBy (compare `on` fst) $ acc
   go !i acc puts
-      | i == maxRetries = throwIO RetriesExceeded
+      | i == maxRetries = go i (acc ++ (map unmush puts)) []
       | otherwise = do
     rs <- doPut conn bucket (map snd puts) w dw
     let (conflicts, ok) = partitionEithers $ zipWith mush puts rs
@@ -216,6 +200,7 @@ putMany doPut conn bucket puts0 w dw = go (0::Int) [] . zip [(0::Int)..] $ puts0
         (_:_) -> Left (i,(k,Just v, resolveMany' c cs))
         []    -> unexError "Network.Riak.Resolvable" "put"
                  "received empty response from server"
+  unmush (i, (k, Just v, x)) = (i, (x, v))
 {-# INLINE putMany #-}
 
 putMany_ :: (Resolvable a) =>
