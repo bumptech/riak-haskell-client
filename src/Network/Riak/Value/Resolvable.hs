@@ -24,6 +24,7 @@ module Network.Riak.Value.Resolvable
     , get
     , getMany
     , getMerge
+    , getWithLength
     , modify
     , modify_
     -- * Low-level modification functions
@@ -51,6 +52,13 @@ getMany :: (Resolvable a, V.IsContent a) => Connection -> Bucket -> [Key] -> R
         -> IO [Maybe (a, VClock)]
 getMany = R.getMany V.getMany
 {-# INLINE getMany #-}
+
+-- | Retrieve a single value.  If conflicting values are returned, the
+-- 'Resolvable' is used to choose a winner.
+getWithLength :: (Resolvable a, V.IsContent a) =>
+       Connection -> Bucket -> Key -> R -> IO (Maybe ((a, Int), VClock))
+getWithLength = R.getWithLength V.get
+{-# INLINE getWithLength #-}
 
 -- | Modify a single value.  The value, if any, is retrieved using
 -- 'get'; conflict resolution is performed if necessary.  The

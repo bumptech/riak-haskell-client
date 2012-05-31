@@ -20,6 +20,7 @@ module Network.Riak.Resolvable.Internal
     , get
     , getMany
     , getMerge
+    , getWithLength
     , modify
     , modify_
     , put
