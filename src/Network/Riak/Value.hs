@@ -25,6 +25,7 @@ module Network.Riak.Value
     , put_
     , putMany
     , putMany_
+    , delete
     ) where
 
 import Control.Applicative
@@ -157,6 +158,10 @@ getResp bucket resp =
            c <- convert bucket content
            return $ Just (c, VClock s)
     _   -> return Nothing
+
+delete :: Connection -> Bucket -> Key -> RW -> IO ()
+delete conn bucket key rw =
+    exchange_ conn (Req.delete bucket key rw)
 
 convert :: IsContent v => Bucket -> Seq.Seq Content -> IO [v]
 convert bucket = go [] [] . toList

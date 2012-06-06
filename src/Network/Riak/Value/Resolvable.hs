@@ -32,6 +32,7 @@ module Network.Riak.Value.Resolvable
     , put_
     , putMany
     , putMany_
+    , delete
     ) where
 
 import Network.Riak.Resolvable.Internal (Resolvable(..))
@@ -179,3 +180,9 @@ putMany_ :: (Resolvable a, V.IsContent a) =>
             Connection -> Bucket -> [(Key, Maybe VClock, a)] -> W -> DW -> IO ()
 putMany_ = R.putMany_ V.putMany
 {-# INLINE putMany_ #-}
+
+
+-- | Delete a single value.
+delete :: Connection -> Bucket -> Key -> RW -> IO ()
+delete = V.delete
+{-# INLINE delete #-}
