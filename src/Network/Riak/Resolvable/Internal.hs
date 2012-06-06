@@ -21,6 +21,7 @@ module Network.Riak.Resolvable.Internal
     , getMany
     , getMerge
     , getWithLength
+    , getMergeWithLength
     , modify
     , modify_
     , put
@@ -178,6 +179,21 @@ getMerge doGet doPut conn bucket key retries r w dw = do
         else return $ Just (v, vc)
     Nothing -> return Nothing
 {-# INLINE getMerge #-}
+
+getMergeWithLength :: (Resolvable a) => Get a -> Put a
+        -> Connection -> Bucket -> Key -> Maybe Int -> R -> W -> DW
+        -> IO (Maybe ((a, Int), VClock))
+getMergeWithLength doGet doPut conn bucket key retries r w dw = do
+  mg <- getWithLength doGet conn bucket key r
+  case mg of
+    Just r@((v, l), vc) -> do
+      if l > 1
+        then do
+          (v', vc') <- put doPut conn bucket key (Just vc) v retries w dw
+          return $ Just ((v', l), vc')
+        else return $ Just r
+    Nothing -> return Nothing
+{-# INLINE getMergeWithLength #-}
 
 putMany :: (Resolvable a) =>
            (Connection -> Bucket -> [(Key, Maybe VClock, a)] -> W -> DW
