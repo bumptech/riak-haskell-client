@@ -165,15 +165,15 @@ modify_ doGet doPut conn bucket key r w dw act = do
 {-# INLINE modify_ #-}
 
 getMerge :: (Resolvable a) => Get a -> Put a
-        -> Connection -> Bucket -> Key -> R -> W -> DW
+        -> Connection -> Bucket -> Key -> Maybe Int -> R -> W -> DW
         -> IO (Maybe (a, VClock))
-getMerge doGet doPut conn bucket key r w dw = do
+getMerge doGet doPut conn bucket key retries r w dw = do
   mg <- getWithLength doGet conn bucket key r
   case mg of
     Just ((v, l), vc) -> do
       if l > 1
         then do
-          (v', vc') <- put doPut conn bucket key (Just vc) v (Just maxRetries) w dw
+          (v', vc') <- put doPut conn bucket key (Just vc) v retries w dw
           return $ Just (v', vc')
         else return $ Just (v, vc)
     Nothing -> return Nothing

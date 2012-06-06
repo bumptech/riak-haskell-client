@@ -122,7 +122,7 @@ put = R.put V.put
 -- 'Resolvable' is used to choose a winner and then the resolved value
 -- is put back.
 getMerge :: (Resolvable a, V.IsContent a) =>
-        Connection -> Bucket -> Key -> R -> W -> DW
+        Connection -> Bucket -> Key -> Maybe Int -> R -> W -> DW
         -> IO (Maybe (a, VClock))
 getMerge = R.getMerge V.get V.put
 {-# INLINE getMerge #-}
