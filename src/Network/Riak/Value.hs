@@ -164,7 +164,7 @@ delete conn bucket key rw =
     exchange_ conn (Req.delete bucket key rw)
 
 convert :: IsContent v => Bucket -> Seq.Seq Content -> IO [v]
-convert bucket = go [] [] . toList
+convert bucket = go [] [] . toList . C.sortContent
     where go cs vs (x:xs) = case fromContent bucket y of
                               Just v -> go cs (v:vs) xs
                               _      -> go (y:cs) vs xs
