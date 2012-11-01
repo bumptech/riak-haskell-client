@@ -21,6 +21,7 @@ module Network.Riak.Value
     , fromContent
     , get
     , getMany
+    , getOpt
     , put
     , put_
     , putMany
@@ -144,12 +145,16 @@ putMany_ conn b puts w dw =
 -- Choosing among them is your responsibility.
 get :: (IsContent c) => Connection -> Bucket -> Key -> R
     -> IO (Maybe ([c], VClock))
-get conn bucket key r = getResp bucket =<< exchangeMaybe conn (Req.get bucket key r)
+get conn bucket key r = getOpt conn bucket key r Nothing Nothing
+
+getOpt :: (IsContent c) => Connection -> Bucket -> Key -> R -> Maybe Bool -> Maybe Bool
+    -> IO (Maybe ([c], VClock))
+getOpt conn bucket key r basic_quorum notfound_ok = getResp bucket =<< exchangeMaybe conn (Req.get bucket key r basic_quorum notfound_ok)
 
 getMany :: (IsContent c) => Connection -> Bucket -> [Key] -> R
         -> IO [Maybe ([c], VClock)]
 getMany conn b ks r =
-    mapM (getResp b) =<< pipelineMaybe conn (map (\k -> Req.get b k r) ks)
+    mapM (getResp b) =<< pipelineMaybe conn (map (\k -> Req.get b k r Nothing Nothing) ks)
 
 getResp :: (IsContent c) => Bucket -> Maybe GetResponse -> IO (Maybe ([c], VClock))
 getResp bucket resp =

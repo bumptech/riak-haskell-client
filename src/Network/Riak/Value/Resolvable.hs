@@ -25,6 +25,7 @@ module Network.Riak.Value.Resolvable
     , getMany
     , getMerge
     , getWithLength
+    , getWithLengthOpt
     , getMergeWithLength
     , modify
     , modify_
@@ -61,6 +62,11 @@ getWithLength :: (Resolvable a, V.IsContent a) =>
        Connection -> Bucket -> Key -> R -> IO (Maybe ((a, Int), VClock))
 getWithLength = R.getWithLength V.get
 {-# INLINE getWithLength #-}
+
+getWithLengthOpt :: (Resolvable a, V.IsContent a) =>
+       Connection -> Bucket -> Key -> R -> Maybe Bool -> Maybe Bool -> IO (Maybe ((a, Int), VClock))
+getWithLengthOpt = R.getWithLengthOpt V.getOpt
+{-# INLINE getWithLengthOpt #-}
 
 -- | Modify a single value.  The value, if any, is retrieved using
 -- 'get'; conflict resolution is performed if necessary.  The

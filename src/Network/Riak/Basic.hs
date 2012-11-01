@@ -75,7 +75,7 @@ getServerInfo conn = exchange conn Req.getServerInfo
 -- Choosing among them is your responsibility.
 get :: Connection -> T.Bucket -> T.Key -> R
     -> IO (Maybe (Seq.Seq Content, VClock))
-get conn bucket key r = Resp.get <$> exchangeMaybe conn (Req.get bucket key r)
+get conn bucket key r = Resp.get <$> exchangeMaybe conn (Req.get bucket key r Nothing Nothing)
 
 -- | Store a single value.  This may return multiple conflicting
 -- siblings.  Choosing among them, and storing a new value, is your

@@ -78,13 +78,13 @@ getServerInfo = GetServerInfoRequest
 {-# INLINE getServerInfo #-}
 
 -- | Create a get request.  The bucket and key names are URL-escaped.
-get :: Bucket -> Key -> R -> Get.GetRequest
-get bucket key r = Get.GetRequest { Get.bucket = escape bucket
+get :: Bucket -> Key -> R -> Maybe Bool -> Maybe Bool -> Get.GetRequest
+get bucket key r basic_quorum notfound_ok = Get.GetRequest { Get.bucket = escape bucket
                                   , Get.key = escape key
                                   , Get.r = fromQuorum r
                                   , Get.pr = Nothing
-                                  , Get.basic_quorum = Nothing
-                                  , Get.notfound_ok = Nothing
+                                  , Get.basic_quorum = basic_quorum
+                                  , Get.notfound_ok = notfound_ok
                                   , Get.if_modified = Nothing
                                   , Get.head = Nothing
                                   , Get.deletedvclock = Nothing

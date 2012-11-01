@@ -21,6 +21,7 @@ module Network.Riak.Resolvable.Internal
     , getMany
     , getMerge
     , getWithLength
+    , getWithLengthOpt
     , getMergeWithLength
     , modify
     , modify_
@@ -81,10 +82,15 @@ instance (Resolvable a) => Resolvable (Maybe a) where
     {-# INLINE resolve #-}
 
 type Get a = Connection -> Bucket -> Key -> R -> IO (Maybe ([a], VClock))
+type GetOpt a = Connection -> Bucket -> Key -> R -> Maybe Bool -> Maybe Bool -> IO (Maybe ([a], VClock))
 
 get_ resolver doGet conn bucket key r =
   fmap (first resolver) `fmap` doGet conn bucket key r
 {-# INLINE get_ #-}
+
+getOpt_ resolver doGet conn bucket key r basic_quorum notfound_ok =
+  fmap (first resolver) `fmap` doGet conn bucket key r basic_quorum notfound_ok
+{-# INLINE getOpt_ #-}
 
 get :: (Resolvable a) => Get a
     -> (Connection -> Bucket -> Key -> R -> IO (Maybe (a, VClock)))
@@ -95,6 +101,11 @@ getWithLength :: (Resolvable a) => Get a
                  -> (Connection -> Bucket -> Key -> R -> IO (Maybe ((a, Int), VClock)))
 getWithLength = get_ resolveManyWithLength
 {-# INLINE getWithLength #-}
+
+getWithLengthOpt :: (Resolvable a) => GetOpt a
+                 -> (Connection -> Bucket -> Key -> R -> Maybe Bool -> Maybe Bool -> IO (Maybe ((a, Int), VClock)))
+getWithLengthOpt = getOpt_ resolveManyWithLength
+{-# INLINE getWithLengthOpt #-}
 
 getMany :: (Resolvable a) =>
            (Connection -> Bucket -> [Key] -> R -> IO [Maybe ([a], VClock)])
