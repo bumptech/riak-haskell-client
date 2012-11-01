@@ -4,13 +4,14 @@ module Network.Riak.Protocol.PutRequest (PutRequest(..)) where
 import Prelude ((+), (/))
 import qualified Prelude as Prelude'
 import qualified Data.Typeable as Prelude'
+import qualified Data.Data as Prelude'
 import qualified Text.ProtocolBuffers.Header as P'
 import qualified Network.Riak.Protocol.Content as Protocol (Content)
  
 data PutRequest = PutRequest{bucket :: !P'.ByteString, key :: !P'.ByteString, vclock :: !(P'.Maybe P'.ByteString),
                              content :: !Protocol.Content, w :: !(P'.Maybe P'.Word32), dw :: !(P'.Maybe P'.Word32),
                              return_body :: !(P'.Maybe P'.Bool)}
-                deriving (Prelude'.Show, Prelude'.Eq, Prelude'.Ord, Prelude'.Typeable)
+                deriving (Prelude'.Show, Prelude'.Eq, Prelude'.Ord, Prelude'.Typeable, Prelude'.Data)
  
 instance P'.Mergeable PutRequest where
   mergeAppend (PutRequest x'1 x'2 x'3 x'4 x'5 x'6 x'7) (PutRequest y'1 y'2 y'3 y'4 y'5 y'6 y'7)

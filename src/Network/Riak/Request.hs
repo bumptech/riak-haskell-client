@@ -81,7 +81,14 @@ getServerInfo = GetServerInfoRequest
 get :: Bucket -> Key -> R -> Get.GetRequest
 get bucket key r = Get.GetRequest { Get.bucket = escape bucket
                                   , Get.key = escape key
-                                  , Get.r = fromQuorum r }
+                                  , Get.r = fromQuorum r
+                                  , Get.pr = Nothing
+                                  , Get.basic_quorum = Nothing
+                                  , Get.notfound_ok = Nothing
+                                  , Get.if_modified = Nothing
+                                  , Get.head = Nothing
+                                  , Get.deletedvclock = Nothing
+                                    }
 {-# INLINE get #-}
 
 -- | Create a put request.  The bucket and key names are URL-escaped.

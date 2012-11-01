@@ -4,10 +4,11 @@ module Network.Riak.Protocol.ListBucketsRequest (ListBucketsRequest(..)) where
 import Prelude ((+), (/))
 import qualified Prelude as Prelude'
 import qualified Data.Typeable as Prelude'
+import qualified Data.Data as Prelude'
 import qualified Text.ProtocolBuffers.Header as P'
  
 data ListBucketsRequest = ListBucketsRequest{}
-                        deriving (Prelude'.Show, Prelude'.Eq, Prelude'.Ord, Prelude'.Typeable)
+                        deriving (Prelude'.Show, Prelude'.Eq, Prelude'.Ord, Prelude'.Typeable, Prelude'.Data)
  
 instance P'.Mergeable ListBucketsRequest where
   mergeAppend ListBucketsRequest ListBucketsRequest = ListBucketsRequest

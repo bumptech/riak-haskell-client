@@ -49,7 +49,7 @@ getClientID = client_id
 -- | Construct a get response.  Bucket and key names in links are
 -- URL-unescaped.
 get :: Maybe GetResponse -> Maybe (Seq.Seq Content, VClock)
-get (Just (GetResponse content (Just vclock)))
+get (Just (GetResponse content (Just vclock) _))
       = Just (unescapeLinks <$> (sortContent content), VClock vclock)
 get _ = Nothing
 {-# INLINE get #-}

@@ -1,5 +1,5 @@
 name:                riak-protobuf
-version:             0.15.0.0
+version:             0.15.1.0
 synopsis:            Haskell types for the Riak protocol buffer API
 description:
   A set of Haskell types for interacting with the protocol buffer
@@ -25,7 +25,7 @@ cabal-version:       >=1.8
 library
   hs-source-dirs: src
 
-  exposed-modules:     
+  exposed-modules:
     Network.Riak.Protocol.BucketProps
     Network.Riak.Protocol.Content
     Network.Riak.Protocol.DeleteRequest
@@ -55,7 +55,7 @@ library
   other-modules:
     Network.Riak.Protocol
 
-  build-depends:       
+  build-depends:
     base == 4.*,
     parsec >= 3,
     protocol-buffers >= 2.0.5,

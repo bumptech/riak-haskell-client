@@ -4,6 +4,7 @@ module Network.Riak.Protocol.Content (Content(..)) where
 import Prelude ((+), (/))
 import qualified Prelude as Prelude'
 import qualified Data.Typeable as Prelude'
+import qualified Data.Data as Prelude'
 import qualified Text.ProtocolBuffers.Header as P'
 import qualified Network.Riak.Protocol.Link as Protocol (Link)
 import qualified Network.Riak.Protocol.Pair as Protocol (Pair)
@@ -12,7 +13,7 @@ data Content = Content{value :: !P'.ByteString, content_type :: !(P'.Maybe P'.By
                        content_encoding :: !(P'.Maybe P'.ByteString), vtag :: !(P'.Maybe P'.ByteString),
                        links :: !(P'.Seq Protocol.Link), last_mod :: !(P'.Maybe P'.Word32), last_mod_usecs :: !(P'.Maybe P'.Word32),
                        usermeta :: !(P'.Seq Protocol.Pair)}
-             deriving (Prelude'.Show, Prelude'.Eq, Prelude'.Ord, Prelude'.Typeable)
+             deriving (Prelude'.Show, Prelude'.Eq, Prelude'.Ord, Prelude'.Typeable, Prelude'.Data)
  
 instance P'.Mergeable Content where
   mergeAppend (Content x'1 x'2 x'3 x'4 x'5 x'6 x'7 x'8 x'9) (Content y'1 y'2 y'3 y'4 y'5 y'6 y'7 y'8 y'9)
