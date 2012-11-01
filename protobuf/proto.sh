@@ -1,6 +1,6 @@
 #!/bin/bash
 
-root="$(hg root)"
+root="$(git rev-parse --show-toplevel)"
 
 if [[ -z "$root" ]]; then
     echo "error: don't know where we are!" 1>&2
