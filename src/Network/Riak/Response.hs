@@ -34,13 +34,13 @@ import Network.Riak.Protocol.Content
 import Network.Riak.Protocol.GetBucketResponse
 import Network.Riak.Protocol.GetClientIDResponse
 import Network.Riak.Protocol.GetResponse
-import Network.Riak.Protocol.Link
 import Network.Riak.Protocol.ListBucketsResponse
 import Network.Riak.Protocol.PutResponse
 import Network.Riak.Types.Internal hiding (MessageTag(..))
 import Network.Riak.Content (sortContent)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Sequence as Seq
+import qualified Network.Riak.Protocol.Link as RL
 
 getClientID :: GetClientIDResponse -> ClientID
 getClientID = client_id
@@ -74,4 +74,4 @@ getBucket = props
 -- 'Content' value.
 unescapeLinks :: Content -> Content
 unescapeLinks c = c { links = go <$> links c }
-  where go l = l { bucket = unescape <$> bucket l, key = unescape <$> key l }
+  where go l = l { RL.bucket = unescape <$> RL.bucket l, RL.key = unescape <$> RL.key l }
