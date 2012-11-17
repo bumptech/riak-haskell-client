@@ -40,7 +40,7 @@ module Network.Riak.Connection.Internal
 import Control.Concurrent (forkIO)
 import Control.Concurrent.Chan (newChan, readChan, writeChan)
 import Control.Concurrent.MVar (newEmptyMVar, putMVar, takeMVar)
-import Control.Exception (Exception, IOException, throw)
+import Control.Exception (Exception, IOException, throw, catch)
 import Control.Monad (forM_, replicateM, replicateM_)
 import Data.Binary.Put (Put, putWord32be, runPut)
 import Data.IORef (newIORef, readIORef, writeIORef)
@@ -178,7 +178,7 @@ recvGet Connection{..} get = do
   case mbs of
     Just bs -> step $ runGet get bs
     Nothing -> moduleError "recvGet" "socket closed"
-  
+
 recvGetN :: Connection -> Int64 -> Get a -> IO a
 recvGetN conn n get = do
   bs <- recvExactly conn n
