@@ -135,7 +135,7 @@ put doPut conn bucket key mvclock0 val0 retries w dw = do
          | otherwise       = do
         (xs, vclock) <- doPut conn bucket key mvclock val w dw
         case xs of
-          [x] | i > 0 || isJust mvclock -> return (x, vclock)
+          [x] -> return (x, vclock)
           (_:_) -> do debugValues "put" "conflict" xs
                       go (i+1) (resolveMany' val xs) (Just vclock)
           []    -> unexError "Network.Riak.Resolvable" "put"
